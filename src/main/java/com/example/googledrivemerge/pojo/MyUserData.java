@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "users_data")
+@Table(name = "user_data")
 public class MyUserData {
 
     @Id
@@ -20,5 +20,9 @@ public class MyUserData {
 
     @Column(name = "refresh_token")
     private String refreshToken;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private MyUser user;
 
 }

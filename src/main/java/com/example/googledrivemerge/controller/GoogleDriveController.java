@@ -23,14 +23,29 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -39,6 +54,7 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @AllArgsConstructor
@@ -47,6 +63,7 @@ public class GoogleDriveController {
     private final JwtUtils jwtUtils;
     private PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+
     /**
      * Application name.
      */
@@ -71,6 +88,25 @@ public class GoogleDriveController {
     private static final List<String> SCOPES =
             Collections.singletonList(DriveScopes.DRIVE_METADATA_READONLY);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
+
+    @Autowired
+    private final OAuth2AuthorizedClientService authorizedClientService;
+
+
+
+//    @GetMapping("/google/login")
+//    public RedirectView googleLogin(OAuth2AuthenticationToken authentication) {
+//        String registrationId = "google"; // Идентификатор, заданный в конфигурации Spring Security
+//        OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId(registrationId)
+//                .principal(authentication)
+//                .build();
+//        OAuth2AuthorizedClient authorizedClient = this.authorizedClientService.authorize(authorizeRequest);
+//        if (authorizedClient == null) {
+//            throw new IllegalArgumentException("Cannot authorize with Google");
+//        }
+//
+//        return new RedirectView("/api/auth/google/callback");
+//    }
 
     //@Operation(summary = "Получить список серверов", description = "Возвращает список всех серверов")
 //    @GetMapping("${username}/files")
@@ -151,12 +187,56 @@ public class GoogleDriveController {
         String accessToken = tokenResponse.getAccessToken();
         String refreshToken = tokenResponse.getRefreshToken();
         Credential credential = new GoogleCredential().setAccessToken(accessToken).setRefreshToken(refreshToken);
+        System.err.println(accessToken);
+
+
 
 
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
+
+
+    //TODO добавить @AuthenticationPrincipal MyUserDetails user
+    @GetMapping("/Callback")
+    @ResponseBody
+    public ResponseEntity<String> handleOAuthPostLogin(@RequestParam String code) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        String clientId = "383424257075-b13hl88n94es1ag646n2kghk85gespdp.apps.googleusercontent.com";
+        String clientSecret = "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";
+        String redirectUri = "http://localhost:8080/Callback";
+
+        String tokenUri = "https://oauth2.googleapis.com/token";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("client_id", clientId);
+        map.add("client_secret", clientSecret);
+        map.add("code", code);
+        map.add("redirect_uri", redirectUri);
+        map.add("grant_type", "authorization_code");
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(tokenUri, entity, String.class);
+
+        return response;
+    }
+
+    @GetMapping("/add-account")
+    public RedirectView initiateAuth() {
+        return new RedirectView("https://accounts.google.com/o/oauth2/auth?access_type=offline&response_type=code&client_id=383424257075-b13hl88n94es1ag646n2kghk85gespdp.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2FCallback");
+    }
+
+    @GetMapping("/save-tokens")
+    public String saveTokens() {
+        return "успех";
+    }
+
 
     @PostMapping("/signin")
     @ResponseStatus(value = HttpStatus.OK)
