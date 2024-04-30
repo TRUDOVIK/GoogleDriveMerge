@@ -3,9 +3,15 @@ package com.example.googledrivemerge.controller;
 import com.example.googledrivemerge.GoogleDriveMergeApplication;
 import com.example.googledrivemerge.config.MyUserDetails;
 import com.example.googledrivemerge.dto.LoginRequest;
+import com.example.googledrivemerge.dto.MyUserDataDto;
+import com.example.googledrivemerge.mapper.MyMapper;
 import com.example.googledrivemerge.pojo.MyUser;
+import com.example.googledrivemerge.pojo.MyUserData;
+import com.example.googledrivemerge.repository.MyUserDataRepository;
+import com.example.googledrivemerge.repository.MyUserRepository;
 import com.example.googledrivemerge.services.GdmService;
 import com.example.googledrivemerge.util.JwtUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -52,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -63,6 +70,9 @@ public class GoogleDriveController {
     private final JwtUtils jwtUtils;
     private PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final ObjectMapper objectMapper;
+    private MyUserDataRepository userDataRepository;
+    private MyUserRepository userRepository;
 
     /**
      * Application name.
@@ -201,7 +211,7 @@ public class GoogleDriveController {
     //TODO добавить @AuthenticationPrincipal MyUserDetails user
     @GetMapping("/Callback")
     @ResponseBody
-    public ResponseEntity<String> handleOAuthPostLogin(@RequestParam String code) {
+    public ResponseEntity<String> handleOAuthPostLogin(@RequestParam String code, @AuthenticationPrincipal MyUserDetails user) {
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -223,6 +233,16 @@ public class GoogleDriveController {
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
 
         ResponseEntity<String> response = restTemplate.postForEntity(tokenUri, entity, String.class);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            MyUserDataDto userData = mapper.readValue(response.getBody(), MyUserDataDto.class);
+            userData.setUser(user.getUser());
+            userDataRepository.save(MyMapper.INSTANCE.myUserDataDtoToMyUserData(userData));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return response;
     }
