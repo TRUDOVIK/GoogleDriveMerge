@@ -2,6 +2,7 @@ package com.example.googledrivemerge.controller;
 
 import com.example.googledrivemerge.GoogleDriveMergeApplication;
 import com.example.googledrivemerge.config.MyUserDetails;
+import com.example.googledrivemerge.dto.FileDto;
 import com.example.googledrivemerge.dto.LoginRequest;
 import com.example.googledrivemerge.dto.MyUserDataDto;
 import com.example.googledrivemerge.mapper.MyMapper;
@@ -10,6 +11,7 @@ import com.example.googledrivemerge.pojo.MyUserData;
 import com.example.googledrivemerge.repository.MyUserDataRepository;
 import com.example.googledrivemerge.repository.MyUserRepository;
 import com.example.googledrivemerge.services.GdmService;
+import com.example.googledrivemerge.services.GoogleDriveService;
 import com.example.googledrivemerge.util.JwtUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.Credential;
@@ -28,6 +30,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.FileList;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,6 +70,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class GoogleDriveController {
     private GdmService service;
+    private GoogleDriveService googleDriveService;
     private final JwtUtils jwtUtils;
     private PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -249,7 +253,7 @@ public class GoogleDriveController {
 
     @GetMapping("/add-account")
     public RedirectView initiateAuth() {
-        return new RedirectView("https://accounts.google.com/o/oauth2/auth?access_type=offline&response_type=code&client_id=383424257075-b13hl88n94es1ag646n2kghk85gespdp.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2FCallback");
+        return new RedirectView("https://accounts.google.com/o/oauth2/auth?access_type=offline&response_type=code&client_id=383424257075-b13hl88n94es1ag646n2kghk85gespdp.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive%20profile&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2FCallback");
     }
 
     @GetMapping("/save-tokens")
@@ -278,6 +282,20 @@ public class GoogleDriveController {
     @ResponseStatus(value = HttpStatus.OK)
     public String authUser(@AuthenticationPrincipal MyUserDetails user) {
         return user.getUsername();
+    }
+
+    @GetMapping("/files")
+    public List<FileDto> getFiles(
+            @RequestParam String username,
+            @RequestParam(defaultValue = "") String searchQuery,
+            @RequestParam(defaultValue = "") String nextPageToken,
+            @RequestParam(defaultValue = "root") String parentFolder,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "") String sortOrder,
+            @AuthenticationPrincipal MyUserDetails user
+            ) throws Exception {
+
+        return googleDriveService.getFiles(username, searchQuery, nextPageToken ,parentFolder, pageSize, sortOrder, user, 0);
     }
 
     @PostMapping("/register")
