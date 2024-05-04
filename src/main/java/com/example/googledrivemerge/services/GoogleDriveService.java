@@ -23,31 +23,58 @@ public class GoogleDriveService {
     @Autowired
     private MyUserRepository userRepository;
 
-    public List<FileDto> getFiles(String username, String searchQuery, String pageToken, String parentFolder, int pageSize, String sortOrder, MyUserDetails user, int currentUser) throws Exception {
+    public List<FileDto> getFiles(String searchQuery, String pageToken, int pageSize, String sortOrder, MyUserDetails user, int owner) throws Exception {
 
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
-                request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(currentUser).getAccessToken())).build();
+                request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
 
 
         List<FileDto> files = new ArrayList<FileDto>();
 
         FileList result = service.files().list()
-                    .setQ("name contains '" + searchQuery + "' and '" + parentFolder + "' in parents")
+                    .setQ("name contains '" + searchQuery)
                     .setPageSize(pageSize)
                     .setOrderBy(sortOrder)
+                    .setPageToken(pageToken)
                     .setFields("nextPageToken, files(id, name, thumbnailLink, webContentLink, iconLink, mimeType, parents)")
                     .setCorpora("user").execute();
-
-        if (result.getNextPageToken().isEmpty() && currentUser < user.getUser().getMyUserData().size()) {
-            files = getFiles(username, searchQuery, null ,parentFolder, pageSize, sortOrder, user, currentUser + 1);
-        } else {
-            try {
-                for (var file : result.getFiles()) {
-                    files.add(MyMapper.INSTANCE.fileToFileDto(file));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            for (var file : result.getFiles()) {
+                var currentFile = MyMapper.INSTANCE.fileToFileDto(file);
+                currentFile.setOwner(owner);
+                files.add(currentFile);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //files.addAll(result.getFiles());
+        //files.get(0).
+        return files;
+    }
+
+    public List<FileDto> getFolderFiles(String searchQuery, String pageToken, String parentFolder, int pageSize, String sortOrder, MyUserDetails user, int owner) throws Exception {
+
+        Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
+                request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
+
+
+        List<FileDto> files = new ArrayList<FileDto>();
+
+        FileList result = service.files().list()
+                .setQ("name contains '" + searchQuery + "' and '" + parentFolder + "' in parents")
+                .setPageSize(pageSize)
+                .setOrderBy(sortOrder)
+                .setPageToken(pageToken)
+                .setFields("nextPageToken, files(id, name, thumbnailLink, webContentLink, iconLink, mimeType, parents)")
+                .setCorpora("user").execute();
+
+        try {
+            for (var file : result.getFiles()) {
+                files.add(MyMapper.INSTANCE.fileToFileDto(file));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         //files.addAll(result.getFiles());

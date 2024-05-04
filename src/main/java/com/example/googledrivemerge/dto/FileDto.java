@@ -13,6 +13,7 @@ public class FileDto {
     private String iconLink;
     private String mimeType;
     private String parents;
+    private int owner;
 
     public void setId(String id) {
         this.id = id;
@@ -43,5 +44,9 @@ public class FileDto {
     }
 
     public FileDto() {
+    }
+
+    public void setOwner(int owner) {
+        this.owner = owner;
     }
 }

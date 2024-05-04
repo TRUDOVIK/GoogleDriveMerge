@@ -42,20 +42,8 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(AuthTokenFilter filter, HttpSecurity http) throws Exception {
-//        http
-//                .authorizeHttpRequests((requests) -> requests
-//                        .requestMatchers("/", "/home", "/register").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .formLogin((form) -> form
-//                        .loginPage("/login")
-//                        .permitAll()
-//                )
-//                .logout((logout) -> logout.permitAll());
-//
-//        return http.build();
         return http.csrf(AbstractHttpConfigurer::disable).cors(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/register", "/signin", "/add-account", "/Callback").permitAll().anyRequest()
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/signup", "/signin", "/add-account", "/Callback").permitAll().anyRequest()
                         .authenticated()).addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -68,19 +56,6 @@ public class WebSecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new SimplePasswordEncoder();
     }
-
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-////        UserDetails user =
-////                User.withDefaultPasswordEncoder()
-////                        .username("user")
-////                        .password("password")
-////                        .roles("USER")
-////                        .build();
-//
-////        return new InMemoryUserDetailsManager(user);
-//        return new MyUserDetailsService();
-//    }
 
     @Bean
     public AuthenticationProvider authenticationProvider(MyUserDetailsService userDetailService) {
