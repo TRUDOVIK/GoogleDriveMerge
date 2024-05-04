@@ -81,5 +81,28 @@ public class GoogleDriveService {
         //files.get(0).
         return files;
     }
+
+    public String deleteFiles(List<FileDto> files, MyUserDetails user) throws Exception {
+        int lastOwner = files.get(0).getOwner();
+
+        Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
+                request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(files.get(0).getOwner()).getAccessToken())).build();
+
+        for (var file : files) {
+            if (file.getOwner() > lastOwner) {
+                service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
+                        request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(file.getOwner()).getAccessToken())).build();
+                lastOwner = file.getOwner();
+            }
+            try {
+                service.files().delete(file.getId()).execute();
+                System.out.println("File with ID " + file.getId() + " has been deleted successfully.");
+            } catch (Exception e) {
+                System.out.println(String.format("An error occurred while deleting file %s: ", file.getId()) + e.getMessage());
+            }
+        }
+
+        return "All files were successfully deleted";
+    }
 }
 

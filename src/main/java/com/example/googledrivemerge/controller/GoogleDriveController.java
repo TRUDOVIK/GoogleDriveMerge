@@ -109,6 +109,11 @@ public class GoogleDriveController {
         return user.getUsername();
     }
 
+    @DeleteMapping("/del-files")
+    public String deleteFiles(@RequestBody List<FileDto> request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
+        return googleDriveService.deleteFiles(request, user);
+    }
+
     @PostMapping("/files")
     public List<FileDto> getFiles(@RequestBody FilesRequestDto request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
         return googleDriveService.getFiles(request.getSearchQuery(), request.getNextPageToken(), request.getPageSize(), request.getSortOrder(), user, request.getOwner());
