@@ -43,7 +43,7 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(AuthTokenFilter filter, HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable).cors(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/signup", "/signin", "/add-account", "/Callback").permitAll().anyRequest()
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/sign-up", "/sign-in", "/add-account", "/Callback").permitAll().anyRequest()
                         .authenticated()).addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
