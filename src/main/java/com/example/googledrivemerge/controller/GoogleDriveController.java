@@ -72,13 +72,13 @@ public class GoogleDriveController {
 
     @GetMapping("/get-username")
     @ResponseStatus(value = HttpStatus.OK)
-    public UsernameResponseDto authUser(@AuthenticationPrincipal MyUserDetails user) {
+    public UsernameResponseDto getUsername(@AuthenticationPrincipal MyUserDetails user) {
         return new UsernameResponseDto(user.getUsername());
     }
 
     @GetMapping("/get-view-link")
     @ResponseStatus(value = HttpStatus.OK)
-    public UrlResponseDto authUser(FileDto file) {
+    public UrlResponseDto getViewLink(FileDto file) {
         return new UrlResponseDto(String.format("https://drive.google.com/file/d/%s/view", file.getId()));
     }
 
@@ -113,8 +113,12 @@ public class GoogleDriveController {
     }
 
     @PostMapping("/sign-up")
-    public MessageResponseDto addUser(@RequestBody MyUser user) {
-        service.addUser(user);
-        return new MessageResponseDto("User is saved");
+    public ResponseEntity<?> addUser(@RequestBody MyUser user) {
+        try {
+            service.addUser(user);
+            return ResponseEntity.ok(authUser(new LoginRequest(user.getUsername(), user.getPassword())));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A user with the same username already exists");
+        }
     }
 }
