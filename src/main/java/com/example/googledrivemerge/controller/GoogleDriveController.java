@@ -51,6 +51,7 @@ public class GoogleDriveController {
     }
 
     @GetMapping("/add-account")
+    @ResponseStatus(value = HttpStatus.OK)
     public UrlResponseDto initiateAuth() {
         return new UrlResponseDto(googleDriveService.addAccount());
     }
@@ -83,6 +84,7 @@ public class GoogleDriveController {
     }
 
     @DeleteMapping("/del-files")
+    @ResponseStatus(value = HttpStatus.OK)
     public MessageResponseDto deleteFiles(@RequestBody List<FileDto> request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
         return new MessageResponseDto(googleDriveService.deleteFiles(request, user));
     }
@@ -118,7 +120,7 @@ public class GoogleDriveController {
             service.addUser(user);
             return ResponseEntity.ok(authUser(new LoginRequest(user.getUsername(), user.getPassword())));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A user with the same username already exists");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 }
