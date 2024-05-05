@@ -17,6 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -50,8 +51,8 @@ public class GoogleDriveController {
     }
 
     @GetMapping("/add-account")
-    public String initiateAuth() {
-        return googleDriveService.addAccount();
+    public UrlResponseDto initiateAuth() {
+        return new UrlResponseDto(googleDriveService.addAccount());
     }
 
     @PostMapping("/sign-in")
@@ -71,19 +72,19 @@ public class GoogleDriveController {
 
     @GetMapping("/get-username")
     @ResponseStatus(value = HttpStatus.OK)
-    public String authUser(@AuthenticationPrincipal MyUserDetails user) {
-        return user.getUsername();
+    public UsernameResponseDto authUser(@AuthenticationPrincipal MyUserDetails user) {
+        return new UsernameResponseDto(user.getUsername());
     }
 
     @GetMapping("/get-view-link")
     @ResponseStatus(value = HttpStatus.OK)
-    public String authUser(FileDto file) {
-        return String.format("https://drive.google.com/file/d/%s/view", file.getId());
+    public UrlResponseDto authUser(FileDto file) {
+        return new UrlResponseDto(String.format("https://drive.google.com/file/d/%s/view", file.getId()));
     }
 
     @DeleteMapping("/del-files")
-    public String deleteFiles(@RequestBody List<FileDto> request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
-        return googleDriveService.deleteFiles(request, user);
+    public MessageResponseDto deleteFiles(@RequestBody List<FileDto> request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
+        return new MessageResponseDto(googleDriveService.deleteFiles(request, user));
     }
 
     @PostMapping("/files")
@@ -97,7 +98,7 @@ public class GoogleDriveController {
     }
 
     @PostMapping("/upload")
-    public String handleFileUpload(@RequestParam("files") MultipartFile[] files, String mimeType, @AuthenticationPrincipal MyUserDetails user) {
+    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, String mimeType, @AuthenticationPrincipal MyUserDetails user) {
         try {
             for (var file : files) {
                 byte[] fileData = file.getBytes();
@@ -106,14 +107,14 @@ public class GoogleDriveController {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error uploading file";
+            return new MessageResponseDto("Error uploading file");
         }
-        return "All files have been successfully uploaded";
+        return new MessageResponseDto("All files have been successfully uploaded");
     }
 
     @PostMapping("/sign-up")
-    public String addUser(@RequestBody MyUser user) {
+    public MessageResponseDto addUser(@RequestBody MyUser user) {
         service.addUser(user);
-        return "User is saved";
+        return new MessageResponseDto("User is saved");
     }
 }
