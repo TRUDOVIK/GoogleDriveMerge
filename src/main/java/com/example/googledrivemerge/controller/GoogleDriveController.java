@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true", allowedHeaders = "*")
+//@CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true", allowedHeaders = "*")
 public class GoogleDriveController {
     private GdmService service;
     private GoogleDriveService googleDriveService;
