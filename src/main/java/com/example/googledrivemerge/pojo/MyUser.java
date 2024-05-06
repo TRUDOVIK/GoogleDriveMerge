@@ -30,7 +30,7 @@ public class MyUser {
     @Column(name = "jwt_token")
     private String token;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<MyUserData> myUserData;
 
 }

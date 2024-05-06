@@ -9,6 +9,7 @@ import com.example.googledrivemerge.repository.MyUserRepository;
 import com.example.googledrivemerge.services.GdmService;
 import com.example.googledrivemerge.services.GoogleDriveService;
 import com.example.googledrivemerge.util.JwtUtils;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.http.*;
@@ -48,6 +49,16 @@ public class GoogleDriveController {
     @ResponseBody
     public ResponseEntity<String> handleOAuthPostLogin(@RequestParam String code, @AuthenticationPrincipal MyUserDetails user) {
         return googleDriveService.handleOAuthPostLogin(code, user);
+    }
+
+    //Ручка для тестов с бэка
+    @GetMapping("/add-access")
+    @ResponseStatus(value = HttpStatus.OK)
+    public String addAccess(@AuthenticationPrincipal MyUserDetails user) {
+        MyUserDataDto userData = new MyUserDataDto("ya29.a0AXooCgv_JcRifzeRpXjUtzjSb7lFS_ASA3OEobvqP-bzzCaBjGLUSSAfEVRXVAdDAfWsJcGA2kjGzfA9y3e4HB50sjkxZArmzKXfTWA28s3u4P6GyMTMJYB0h5Sf0YAk0HWw8XQz8P6h5w6OHCtjHSQ2XYriMDQ8VDuwaCgYKAZsSARISFQHGX2Mi6a9OcSJnwQeKSQ5-Hvirfg0171", "");
+        userData.setUser(user.getUser());
+        userDataRepository.save(MyMapper.INSTANCE.myUserDataDtoToMyUserData(userData));
+        return "ok";
     }
 
     @GetMapping("/add-account")

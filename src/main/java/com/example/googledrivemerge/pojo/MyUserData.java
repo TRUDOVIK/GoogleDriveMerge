@@ -26,7 +26,7 @@ public class MyUserData {
     @Column(name = "token_update_time")
     private LocalDate tokenUpdateTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private MyUser user;
 

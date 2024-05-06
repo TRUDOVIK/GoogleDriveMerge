@@ -88,11 +88,17 @@ public class GoogleDriveService {
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                 request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
 
-
         List<FileDto> files = new ArrayList<FileDto>();
 
+        String qParam;
+        if (searchQuery.isEmpty()) {
+            qParam = "";
+        } else {
+            qParam = "name contains '" + searchQuery + "'";
+        }
+
         FileList result = service.files().list()
-                    .setQ("name contains '" + searchQuery)
+                    .setQ(qParam)
                     .setPageSize(pageSize)
                     .setOrderBy(sortOrder)
                     .setPageToken(pageToken)
