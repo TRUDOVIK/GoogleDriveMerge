@@ -2,6 +2,7 @@ package com.example.googledrivemerge.services;
 
 import com.example.googledrivemerge.config.MyUserDetails;
 import com.example.googledrivemerge.dto.FileDto;
+import com.example.googledrivemerge.dto.FilesResponseDto;
 import com.example.googledrivemerge.dto.MyUserDataDto;
 import com.example.googledrivemerge.mapper.MyMapper;
 import com.example.googledrivemerge.repository.MyUserDataRepository;
@@ -84,7 +85,9 @@ public class GoogleDriveService {
     }
 
 
-    public List<FileDto> getFiles(String searchQuery, String pageToken, int pageSize, String sortOrder, MyUserDetails user, int owner) throws Exception {
+    public ResponseEntity<FilesResponseDto> getFiles(String searchQuery, String pageToken, int pageSize, String sortOrder, MyUserDetails user, int owner) throws Exception {
+
+        Integer nextOwnerIndex = owner;
 
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                 request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
@@ -112,15 +115,21 @@ public class GoogleDriveService {
                 files.add(currentFile);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            return ResponseEntity.status(400).build();
         }
 
+        if ((result.getNextPageToken() == null || result.getNextPageToken().isEmpty())) {
+            nextOwnerIndex++;
+            if (nextOwnerIndex >= user.getUser().getMyUserData().size()) {
+                nextOwnerIndex = null;
+            }
+        }
         //files.addAll(result.getFiles());
         //files.get(0).
-        return files;
+        return ResponseEntity.ok(new FilesResponseDto(files, result.getNextPageToken(), nextOwnerIndex));
     }
 
-    public List<FileDto> getFolderFiles(String searchQuery, String pageToken, String parentFolder, int pageSize, String sortOrder, MyUserDetails user, int owner) throws Exception {
+    public ResponseEntity<FilesResponseDto> getFolderFiles(String searchQuery, String pageToken, String parentFolder, int pageSize, String sortOrder, MyUserDetails user, int owner) throws Exception {
 
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                 request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
@@ -128,8 +137,15 @@ public class GoogleDriveService {
 
         List<FileDto> files = new ArrayList<FileDto>();
 
+        String qParam;
+        if (searchQuery.isEmpty()) {
+            qParam = "'";
+        } else {
+            qParam = "name contains '" + searchQuery + "' and '";
+        }
+
         FileList result = service.files().list()
-                .setQ("name contains '" + searchQuery + "' and '" + parentFolder + "' in parents")
+                .setQ(qParam + parentFolder + "' in parents")
                 .setPageSize(pageSize)
                 .setOrderBy(sortOrder)
                 .setPageToken(pageToken)
@@ -141,12 +157,12 @@ public class GoogleDriveService {
                 files.add(MyMapper.INSTANCE.fileToFileDto(file));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            return ResponseEntity.status(400).build();
         }
 
         //files.addAll(result.getFiles());
         //files.get(0).
-        return files;
+        return ResponseEntity.ok(new FilesResponseDto(files, result.getNextPageToken(), owner)) ;
     }
 
     public String deleteFiles(List<FileDto> files, MyUserDetails user) throws Exception {

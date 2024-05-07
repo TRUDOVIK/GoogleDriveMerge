@@ -17,6 +17,7 @@ import java.util.List;
 public interface MyMapper {
     MyMapper INSTANCE = Mappers.getMapper(MyMapper.class);
 
+    @Mapping(source = "accessToken",target = "accessToken")
     MyUserData myUserDataDtoToMyUserData(MyUserDataDto dto);
     MyUserDataDto MyUserDataToMyUserDataDto(MyUserData entity);
 

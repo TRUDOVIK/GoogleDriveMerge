@@ -101,12 +101,12 @@ public class GoogleDriveController {
     }
 
     @PostMapping("/files")
-    public List<FileDto> getFiles(@RequestBody FilesRequestDto request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
+    public ResponseEntity<FilesResponseDto> getFiles(@RequestBody FilesRequestDto request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
         return googleDriveService.getFiles(request.getSearchQuery(), request.getNextPageToken(), request.getPageSize(), request.getSortOrder(), user, request.getOwner());
     }
 
     @PostMapping("/folder")
-    public List<FileDto> getFolderFiles(@RequestBody FilesRequestDto request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
+    public ResponseEntity<FilesResponseDto> getFolderFiles(@RequestBody FilesRequestDto request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
         return googleDriveService.getFolderFiles(request.getSearchQuery(), request.getNextPageToken(), request.getParentFolder(), request.getPageSize(), request.getSortOrder(), user, request.getOwner());
     }
 
