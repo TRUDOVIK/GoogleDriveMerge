@@ -11,6 +11,6 @@ import java.util.List;
 @Setter
 public class FilesResponseDto {
     private List<FileDto> fileDtos;
-    private String nextPageToken;
-    private Integer nextOwnerIndex;
+    private String nextPageToken = null;
+    private Integer nextOwnerIndex = 0;
 }
