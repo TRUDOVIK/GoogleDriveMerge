@@ -12,6 +12,7 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
+import java.util.Objects;
 
 @Mapper
 public interface MyMapper {
@@ -28,6 +29,10 @@ public interface MyMapper {
 
     @Named("formatParents")
     default String formatParents(List<String> parents) {
-        return parents.get(0);
+        if (Objects.isNull(parents)) {
+            return null;
+        } else {
+            return parents.get(0);
+        }
     }
 }
