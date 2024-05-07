@@ -36,6 +36,7 @@ import java.util.concurrent.CompletableFuture;
 public class GoogleDriveService {
     @Autowired
     private MyUserRepository userRepository;
+    @Autowired
     private MyUserDataRepository userDataRepository;
 
     @Value("${client-id}")
