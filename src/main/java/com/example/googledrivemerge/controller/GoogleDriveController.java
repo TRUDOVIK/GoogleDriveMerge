@@ -94,11 +94,23 @@ public class GoogleDriveController {
         return new UsernameResponseDto(user.getUsername());
     }
 
-    @GetMapping("/get-view-link")
+    @PostMapping("/get-view-link")
     @ResponseStatus(value = HttpStatus.OK)
-    public UrlResponseDto getViewLink(FileDto file) {
+    public UrlResponseDto getViewLink(@RequestBody FileDto file) {
         return new UrlResponseDto(String.format("https://drive.google.com/file/d/%s/view", file.getId()));
     }
+
+    @PostMapping("/get-share-link")
+    @ResponseStatus(value = HttpStatus.OK)
+    public ResponseEntity<?> getShareLink(@RequestBody FileDto file, @AuthenticationPrincipal MyUserDetails user) throws IOException {
+        try {
+            googleDriveService.shareFile(file.getId(), file.getOwner(), user);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        return ResponseEntity.ok(new UrlResponseDto(String.format("https://drive.google.com/file/d/%s/view", file.getId())));
+    }
+
 
     @DeleteMapping("/del-files")
     @ResponseStatus(value = HttpStatus.OK)

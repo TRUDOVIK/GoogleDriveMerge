@@ -17,6 +17,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.Permission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -251,6 +252,17 @@ public class GoogleDriveService {
         service = checkAndRefreshToken(service, user, owner);
 
         return CompletableFuture.completedFuture(service.files().get(fileId).setAlt("media").executeMediaAsInputStream());
+    }
+
+    public void shareFile(String fileId, int owner, MyUserDetails user) throws IOException {
+        Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
+                request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
+
+        service = checkAndRefreshToken(service, user, owner);
+        Permission permission = new Permission()
+                .setType("anyone")
+                .setRole("reader");
+        service.permissions().create(fileId, permission).execute();
     }
 
 //    public String downloadFile(DownloadRequestDto requestDto, MyUserDetails user) throws Exception {
