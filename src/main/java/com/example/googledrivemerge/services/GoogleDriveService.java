@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -211,5 +212,26 @@ public class GoogleDriveService {
             return future;
         }
     }
+
+    @Async
+    public CompletableFuture<InputStream> downloadFile(String fileId, MyUserDetails user, int owner) throws IOException {
+        Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
+                request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
+        return CompletableFuture.completedFuture(service.files().get(fileId).setAlt("media").executeMediaAsInputStream());
+    }
+
+//    public String downloadFile(DownloadRequestDto requestDto, MyUserDetails user) throws Exception {
+//        URL url = new URL(requestDto.getWebContentLink());
+//        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//        connection.setRequestMethod("GET");
+//        connection.setRequestProperty("Authorization", "Bearer " + user.getUser().getMyUserData().get(requestDto.getOwner()).getAccessToken());
+//
+//        int responseCode = connection.getResponseCode();
+//        if (responseCode == HttpURLConnection.HTTP_OK) {
+//            return connection.getURL().toString();
+//        } else {
+//            throw new IOException("Failed to get direct download link. Response code: " + responseCode);
+//        }
+//    }
 }
 

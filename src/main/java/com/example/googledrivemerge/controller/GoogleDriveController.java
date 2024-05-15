@@ -11,6 +11,7 @@ import com.example.googledrivemerge.services.GoogleDriveService;
 import com.example.googledrivemerge.util.JwtUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,8 +30,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @AllArgsConstructor
@@ -108,6 +113,48 @@ public class GoogleDriveController {
     @PostMapping("/folder")
     public ResponseEntity<FilesResponseDto> getFolderFiles(@RequestBody FilesRequestDto request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
         return googleDriveService.getFolderFiles(request.getSearchQuery(), request.getNextPageToken(), request.getParentFolder(), request.getPageSize(), request.getSortOrder(), user, request.getOwner());
+    }
+
+//    @PostMapping("/download")
+//    public String handleFileDownload(@RequestBody DownloadRequestDto request, @AuthenticationPrincipal MyUserDetails user) throws Exception {
+//        return googleDriveService.downloadFile(request, user);
+//    }
+
+    @PostMapping("/downloadFiles")
+    public void downloadFiles(@RequestBody List<DownloadRequestDto> requestDtos, @AuthenticationPrincipal MyUserDetails user, HttpServletResponse response) {
+        try {
+            for (var requestDto : requestDtos) {
+                downloadFile(requestDto, user, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/downloadFile")
+    public void downloadFile(@RequestBody DownloadRequestDto requestDto, @AuthenticationPrincipal MyUserDetails user, HttpServletResponse response) {
+        try {
+            CompletableFuture<InputStream> futureInputStream = googleDriveService.downloadFile(requestDto.getFileId(), user, requestDto.getOwner());
+
+            response.setContentType("application/octet-stream");
+            response.setHeader("Content-Disposition",  "attachment; filename=\"" + requestDto.getName() + "\"");
+
+            InputStream inputStream = futureInputStream.get();
+
+            OutputStream outputStream = response.getOutputStream();
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            inputStream.close();
+            outputStream.close();
+        } catch (IOException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/upload")
