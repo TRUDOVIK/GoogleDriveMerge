@@ -5,9 +5,12 @@ import com.example.googledrivemerge.dto.FileDto;
 import com.example.googledrivemerge.dto.FilesResponseDto;
 import com.example.googledrivemerge.dto.MyUserDataDto;
 import com.example.googledrivemerge.mapper.MyMapper;
+import com.example.googledrivemerge.pojo.MyUserData;
 import com.example.googledrivemerge.repository.MyUserDataRepository;
 import com.example.googledrivemerge.repository.MyUserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
@@ -48,6 +51,24 @@ public class GoogleDriveService {
     @Value("${redirect-uri}")
     String redirectUri;
 
+
+    public Drive checkAndRefreshToken(Drive service, MyUserDetails user, int owner) throws IOException {
+        if (service == null || service.getRequestFactory() == null) {
+            GoogleRefreshTokenRequest request = new GoogleRefreshTokenRequest(
+                    new NetHttpTransport(), new GsonFactory(), user.getUser().getMyUserData().get(owner).getRefreshToken(), clientId, clientSecret);
+
+            TokenResponse tokenResponse = request.execute();
+            String newAccessToken = tokenResponse.getAccessToken();
+
+            service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
+                    request1 -> request1.getHeaders().setAuthorization("Bearer " + newAccessToken)).build();
+            MyUserData userData = user.getUser().getMyUserData().get(owner);
+            userData.setAccessToken(newAccessToken);
+            userDataRepository.save(userData);
+            return service;
+        }
+        return service;
+    }
 
     public String addAccount() {
         return String.format("https://accounts.google.com/o/oauth2/auth?access_type=offline&response_type=code&client_id=%s&scope=https%%3A%%2F%%2Fwww.googleapis.com%%2Fauth%%2Fdrive%%20profile&redirect_uri=%s", clientId, redirectUri);
@@ -93,6 +114,8 @@ public class GoogleDriveService {
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                 request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
 
+        service = checkAndRefreshToken(service, user, owner);
+
         List<FileDto> files = new ArrayList<FileDto>();
 
         String qParam;
@@ -135,6 +158,7 @@ public class GoogleDriveService {
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                 request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
 
+        service = checkAndRefreshToken(service, user, owner);
 
         List<FileDto> files = new ArrayList<FileDto>();
 
@@ -172,10 +196,13 @@ public class GoogleDriveService {
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                 request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(files.get(0).getOwner()).getAccessToken())).build();
 
+        service = checkAndRefreshToken(service, user, lastOwner);
+
         for (var file : files) {
             if (file.getOwner() > lastOwner) {
                 service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                         request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(file.getOwner()).getAccessToken())).build();
+                service = checkAndRefreshToken(service, user, file.getOwner());
                 lastOwner = file.getOwner();
             }
             try {
@@ -199,6 +226,8 @@ public class GoogleDriveService {
             Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                     request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(0).getAccessToken())).build();
 
+            service = checkAndRefreshToken(service, user, 0);
+
             ByteArrayContent mediaContent = new ByteArrayContent(mimeType, fileData);
 
             File file = service.files().create(fileMetadata, mediaContent)
@@ -215,8 +244,12 @@ public class GoogleDriveService {
 
     @Async
     public CompletableFuture<InputStream> downloadFile(String fileId, MyUserDetails user, int owner) throws IOException {
+
         Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
                 request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
+
+        service = checkAndRefreshToken(service, user, owner);
+
         return CompletableFuture.completedFuture(service.files().get(fileId).setAlt("media").executeMediaAsInputStream());
     }
 
