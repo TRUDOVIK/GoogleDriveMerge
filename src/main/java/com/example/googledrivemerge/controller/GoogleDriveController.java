@@ -9,6 +9,7 @@ import com.example.googledrivemerge.repository.MyUserRepository;
 import com.example.googledrivemerge.services.GdmService;
 import com.example.googledrivemerge.services.GoogleDriveService;
 import com.example.googledrivemerge.util.JwtUtils;
+import com.example.googledrivemerge.util.MimeTypeUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -158,11 +159,12 @@ public class GoogleDriveController {
     }
 
     @PostMapping("/upload")
-    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, String mimeType, @AuthenticationPrincipal MyUserDetails user) {
+    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, @AuthenticationPrincipal MyUserDetails user) {
         try {
             for (var file : files) {
                 byte[] fileData = file.getBytes();
                 String fileName = file.getOriginalFilename();
+                String mimeType = MimeTypeUtil.getMimeType(fileName);
                 googleDriveService.uploadFileAsync(fileData, fileName, mimeType, user);
             }
         } catch (Exception e) {
