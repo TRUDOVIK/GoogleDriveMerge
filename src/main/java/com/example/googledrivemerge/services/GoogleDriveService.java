@@ -119,15 +119,8 @@ public class GoogleDriveService {
 
         List<FileDto> files = new ArrayList<FileDto>();
 
-        String qParam;
-        if (searchQuery.isEmpty()) {
-            qParam = "";
-        } else {
-            qParam = "name contains '" + searchQuery + "'";
-        }
-
         FileList result = service.files().list()
-                    .setQ(qParam)
+                    .setQ("'root' in parents and name contains '" + searchQuery + "'")
                     .setPageSize(pageSize)
                     .setOrderBy(sortOrder)
                     .setPageToken(pageToken)
