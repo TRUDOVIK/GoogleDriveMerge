@@ -165,13 +165,13 @@ public class GoogleDriveController {
     }
 
     @PostMapping("/upload")
-    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, @RequestBody UploadFilesMetadataDto uploadFilesMetadataDto, @AuthenticationPrincipal MyUserDetails user) {
+    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, @RequestParam("owner") int owner, @RequestParam("fileId") String fileId, @AuthenticationPrincipal MyUserDetails user) {
         try {
             for (var file : files) {
                 byte[] fileData = file.getBytes();
                 String fileName = file.getOriginalFilename();
                 String mimeType = MimeTypeUtil.getMimeType(fileName);
-                googleDriveService.uploadFileAsync(fileData, fileName, mimeType, uploadFilesMetadataDto.getFileId(), uploadFilesMetadataDto.getOwner(), user);
+                googleDriveService.uploadFileAsync(fileData, fileName, mimeType, fileId, owner, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
