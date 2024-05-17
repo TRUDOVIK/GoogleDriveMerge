@@ -35,6 +35,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -212,20 +213,21 @@ public class GoogleDriveService {
 
 
     @Async
-    public CompletableFuture<String> uploadFileAsync(byte[] fileData, String fileName, String mimeType, MyUserDetails user) {
+    public CompletableFuture<String> uploadFileAsync(byte[] fileData, String fileName, String mimeType, String folderId, int owner, MyUserDetails user) {
         try {
             File fileMetadata = new File();
             fileMetadata.setName(fileName);
+            fileMetadata.setParents(Collections.singletonList(folderId));
 
             Drive service = new Drive.Builder(new NetHttpTransport(), new GsonFactory(),
-                    request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(0).getAccessToken())).build();
+                    request -> request.getHeaders().setAuthorization("Bearer " + user.getUser().getMyUserData().get(owner).getAccessToken())).build();
 
             service = checkAndRefreshToken(service, user, 0);
 
             ByteArrayContent mediaContent = new ByteArrayContent(mimeType, fileData);
 
             File file = service.files().create(fileMetadata, mediaContent)
-                    .setFields("id")
+                    .setFields("id, parents")
                     .execute();
 
             return CompletableFuture.completedFuture(file.getId());

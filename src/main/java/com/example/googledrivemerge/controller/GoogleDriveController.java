@@ -10,7 +10,6 @@ import com.example.googledrivemerge.services.GdmService;
 import com.example.googledrivemerge.services.GoogleDriveService;
 import com.example.googledrivemerge.util.JwtUtils;
 import com.example.googledrivemerge.util.MimeTypeUtil;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -20,16 +19,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -171,13 +165,13 @@ public class GoogleDriveController {
     }
 
     @PostMapping("/upload")
-    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, @AuthenticationPrincipal MyUserDetails user) {
+    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, @RequestBody UploadFilesMetadataDto uploadFilesMetadataDto, @AuthenticationPrincipal MyUserDetails user) {
         try {
             for (var file : files) {
                 byte[] fileData = file.getBytes();
                 String fileName = file.getOriginalFilename();
                 String mimeType = MimeTypeUtil.getMimeType(fileName);
-                googleDriveService.uploadFileAsync(fileData, fileName, mimeType, user);
+                googleDriveService.uploadFileAsync(fileData, fileName, mimeType, uploadFilesMetadataDto.getFileId(), uploadFilesMetadataDto.getOwner(), user);
             }
         } catch (Exception e) {
             e.printStackTrace();
