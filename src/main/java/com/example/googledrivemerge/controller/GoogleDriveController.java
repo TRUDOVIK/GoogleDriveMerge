@@ -142,7 +142,7 @@ public class GoogleDriveController {
     @PostMapping("/downloadFile")
     public void downloadFile(@RequestBody DownloadRequestDto requestDto, @AuthenticationPrincipal MyUserDetails user, HttpServletResponse response) {
         try {
-            CompletableFuture<InputStream> futureInputStream = googleDriveService.downloadFile(requestDto.getFileId(), user, requestDto.getOwner());
+            CompletableFuture<InputStream> futureInputStream = googleDriveService.downloadFile(requestDto.getId(), user, requestDto.getOwner());
 
             response.setContentType("application/octet-stream");
             response.setHeader("Content-Disposition",  "attachment; filename=\"" + requestDto.getName() + "\"");

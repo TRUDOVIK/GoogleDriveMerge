@@ -12,5 +12,5 @@ import lombok.Setter;
 public class DownloadRequestDto {
     private String name = "unnamed";
     private int owner = 0;
-    private String fileId;
+    private String id;
 }
