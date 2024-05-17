@@ -165,7 +165,7 @@ public class GoogleDriveController {
     }
 
     @PostMapping("/upload")
-    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, @RequestParam("owner") int owner, @RequestParam("fileId") String fileId, @AuthenticationPrincipal MyUserDetails user) {
+    public MessageResponseDto handleFileUpload(@RequestParam("files") MultipartFile[] files, @RequestParam(value = "owner", defaultValue = "0") int owner, @RequestParam(value = "fileId", defaultValue = "root") String fileId, @AuthenticationPrincipal MyUserDetails user) {
         try {
             for (var file : files) {
                 byte[] fileData = file.getBytes();
