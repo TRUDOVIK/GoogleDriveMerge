@@ -30,4 +30,7 @@ public class MyUserData {
     @JoinColumn(name = "user_id")
     private MyUser user;
 
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
 }
