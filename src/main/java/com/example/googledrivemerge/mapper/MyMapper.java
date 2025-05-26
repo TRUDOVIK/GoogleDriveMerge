@@ -19,6 +19,7 @@ public interface MyMapper {
     MyMapper INSTANCE = Mappers.getMapper(MyMapper.class);
 
     @Mapping(source = "accessToken",target = "accessToken")
+    @Mapping(source = "refreshToken",target = "refreshToken")
     MyUserData myUserDataDtoToMyUserData(MyUserDataDto dto);
     MyUserDataDto MyUserDataToMyUserDataDto(MyUserData entity);
 

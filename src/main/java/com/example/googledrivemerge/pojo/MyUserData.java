@@ -33,4 +33,20 @@ public class MyUserData {
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void setTokenUpdateTime(LocalDate tokenUpdateTime) {
+        this.tokenUpdateTime = tokenUpdateTime;
+    }
+
+    public void setUser(MyUser user) {
+        this.user = user;
+    }
 }
