@@ -35,7 +35,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://45.14.165.46:8081", "http://localhost:8081/", "https://cool-salmiakki-0d9580.netlify.app/", "https://a97b-45-14-165-46.ngrok-free.app/")
+                .allowedOrigins("http://45.14.165.46:8081", "http://localhost:8081/", "https://cool-salmiakki-0d9580.netlify.app/", "https://a97b-45-14-165-46.ngrok-free.app/, https://7106-45-14-165-46.ngrok-free.app/")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
